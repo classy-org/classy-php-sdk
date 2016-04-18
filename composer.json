@@ -1,0 +1,22 @@
+{
+    "name": "classy-org/classy-php-sdk",
+    "type": "library",
+    "description": "Php HTTP client library for Classy API",
+    "require": {
+        "guzzlehttp/guzzle": "^6.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.0",
+        "mockery/mockery": "^0.9.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Classy\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Classy\\Tests\\": "tests"
+        }
+    }
+}
