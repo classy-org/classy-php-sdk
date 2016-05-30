@@ -2,7 +2,6 @@
 
 namespace Classy\Exceptions;
 
-
 use GuzzleHttp\Exception\BadResponseException;
 
 class APIResponseException extends \Exception

@@ -108,19 +108,27 @@ class Client
     /**
      * @param $username
      * @param $password
-     * @return Session
+     * @return Session|null
      */
     public function newMemberSessionFromCredentials($username, $password)
     {
-        $response = $this->request('POST', '/oauth2/auth', null, [
-            'form_params' => [
-                'grant_type'    => 'password',
-                'client_id'     => $this->client_id,
-                'client_secret' => $this->client_secret,
-                'username' => $username,
-                'password' => $password
-            ]
-        ]);
+        try {
+            $response = $this->request('POST', '/oauth2/auth', null, [
+                'form_params' => [
+                    'grant_type'    => 'password',
+                    'client_id'     => $this->client_id,
+                    'client_secret' => $this->client_secret,
+                    'username' => $username,
+                    'password' => $password
+                ]
+            ]);
+        } catch (APIResponseException $e) {
+            $response = $e->getResponseData();
+            if (isset($response->error) && $response->error == 'Invalid user credentials') {
+                return null;
+            }
+            throw $e;
+        }
         return new Session($response);
     }
 
