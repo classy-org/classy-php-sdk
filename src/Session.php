@@ -3,6 +3,7 @@
 namespace Classy;
 
 use Classy\Exceptions\SDKException;
+use DateTime;
 
 Class Session implements \Serializable
 {
@@ -66,6 +67,16 @@ Class Session implements \Serializable
     public function expired()
     {
         return time() > $this->expires_at;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function expires_at()
+    {
+        $result = new DateTime();
+        $result->setTimestamp($this->expires_at);
+        return $result;
     }
 
 
