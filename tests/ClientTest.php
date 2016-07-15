@@ -112,7 +112,8 @@ class ClientTest extends TestCase
                     'client_id' => '123',
                     'client_secret' => '456',
                     'username' => 'email@domain.tld',
-                    'password' => 'pass'
+                    'password' => 'pass',
+                    'ip' => null,
                 ];
             }))
             ->andReturn(new Response(200, [], "{}"));
@@ -134,6 +135,7 @@ class ClientTest extends TestCase
                     'client_id' => '123',
                     'client_secret' => '456',
                     'refresh_token' => 'token',
+                    'ip' => null,
                 ];
             }))
             ->andReturn(new Response(200, [], "{}"));

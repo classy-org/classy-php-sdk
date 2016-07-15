@@ -6,6 +6,7 @@ use Classy\Exceptions\APIResponseException;
 use Classy\Exceptions\SDKException;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\BadResponseException;
+use Symfony\Component\HttpFoundation\Request;
 
 class Client
 {
@@ -119,7 +120,8 @@ class Client
                     'client_id'     => $this->client_id,
                     'client_secret' => $this->client_secret,
                     'username' => $username,
-                    'password' => $password
+                    'password' => $password,
+                    'ip'       => $this->getClientIp(),
                 ]
             ]);
         } catch (APIResponseException $e) {
@@ -143,7 +145,8 @@ class Client
                 'grant_type'    => 'refresh_token',
                 'client_id'     => $this->client_id,
                 'client_secret' => $this->client_secret,
-                'refresh_token' => $refresh_token
+                'refresh_token' => $refresh_token,
+                'ip'            => $this->getClientIp(),
             ]
         ]);
         return new Session($response);
@@ -261,5 +264,11 @@ class Client
         $version = trim($version, "/ \t\n\r\0\x0B");
         $endpoint = trim($endpoint, "/ \t\n\r\0\x0B");
         return "/$version/$endpoint";
+    }
+
+    private function getClientIp()
+    {
+        $httpRequest = Request::createFromGlobals();
+        return $httpRequest->getClientIp();
     }
 }
