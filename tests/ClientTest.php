@@ -193,7 +193,8 @@ class ClientTest extends TestCase
                     'grant_type' => 'refresh_token',
                     'client_id' => '123',
                     'client_secret' => '456',
-                    'refresh_token' => '55555'
+                    'refresh_token' => '55555',
+                    'ip' => null,
                 ];
             }))
             ->andReturn(new Response(200, [], json_encode([

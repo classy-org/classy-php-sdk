@@ -114,6 +114,7 @@ class Client
     public function newMemberSessionFromCredentials($username, $password)
     {
         try {
+            $ips = $this->getClientIps();
             $response = $this->request('POST', '/oauth2/auth', null, [
                 'form_params' => [
                     'grant_type'    => 'password',
@@ -121,7 +122,7 @@ class Client
                     'client_secret' => $this->client_secret,
                     'username' => $username,
                     'password' => $password,
-                    'ip'       => $this->getClientIp(),
+                    'ip'            => empty($ips) ? null : implode(', ', $ips),
                 ]
             ]);
         } catch (APIResponseException $e) {
@@ -140,16 +141,9 @@ class Client
      */
     public function newMemberSessionFromRefreshToken($refresh_token)
     {
-        $response = $this->request('POST', '/oauth2/auth', null, [
-            'form_params' => [
-                'grant_type'    => 'refresh_token',
-                'client_id'     => $this->client_id,
-                'client_secret' => $this->client_secret,
-                'refresh_token' => $refresh_token,
-                'ip'            => $this->getClientIp(),
-            ]
-        ]);
-        return new Session($response);
+        $session = new Session(['refresh_token' => $refresh_token]);
+        $this->refresh($session);
+        return $session;
     }
 
     /**
@@ -158,12 +152,14 @@ class Client
     public function refresh(Session $session)
     {
         if (!is_null($session->getRefreshToken())) {
+            $ips = $this->getClientIps();
             $response = $this->request('POST', '/oauth2/auth', null, [
                 'form_params' => [
                     'grant_type'    => 'refresh_token',
                     'client_id'     => $this->client_id,
                     'client_secret' => $this->client_secret,
-                    'refresh_token' => $session->getRefreshToken()
+                    'refresh_token' => $session->getRefreshToken(),
+                    'ip'            => empty($ips) ? null : implode(', ', $ips),
                 ]
             ]);
         } else {
@@ -266,9 +262,19 @@ class Client
         return "/$version/$endpoint";
     }
 
-    private function getClientIp()
+
+    /**
+     * @return array
+     */
+    protected function getClientIps()
     {
-        $httpRequest = Request::createFromGlobals();
-        return $httpRequest->getClientIp();
+        $ips = [];
+        if (!empty($_SERVER['REMOTE_ADDR'])) {
+            array_push($ips, $_SERVER['REMOTE_ADDR']);
+        }
+        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            array_push($ips, $_SERVER['HTTP_X_FORWARDED_FOR']);
+        }
+        return $ips;
     }
 }
