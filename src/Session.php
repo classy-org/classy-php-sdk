@@ -66,7 +66,8 @@ Class Session implements \Serializable
      */
     public function expired()
     {
-        return time() > $this->expires_at;
+        // Adding some margin. Session will be marked as expired 60 seconds before it really expires.
+        return time() + 60 > $this->expires_at;
     }
 
     /**
