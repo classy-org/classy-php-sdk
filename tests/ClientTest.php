@@ -315,6 +315,30 @@ class ClientTest extends TestCase
     }
 
     /**
+     * @covers Classy\Client::request
+     */
+    public function testRequestWithDefaultSession()
+    {
+        $session = new Session([
+            'access_token' => 'abcdef',
+            'expires_in' => '1000'
+        ]);
+        $this->client->setDefaultSession($session);
+
+        $this->guzzleMock->shouldReceive('request')
+            ->once()
+            ->with(
+                'GET',
+                '/3.0/endpoint',
+                Mockery::on(function($args) {
+                    return $args === ['headers' => ['Authorization' => 'Bearer abcdef']];
+                }))
+            ->andReturn(new Response(200, [], "{}"));
+
+        $this->client->request('GET', '/3.0/endpoint');
+    }
+
+    /**
      * @covers Classy\Client::applyVersion
      */
     public function testApplyVersion()

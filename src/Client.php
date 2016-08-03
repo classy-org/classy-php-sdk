@@ -6,7 +6,6 @@ use Classy\Exceptions\APIResponseException;
 use Classy\Exceptions\SDKException;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\BadResponseException;
-use Symfony\Component\HttpFoundation\Request;
 
 class Client
 {
@@ -29,6 +28,11 @@ class Client
      * @var GuzzleClient
      */
     private $httpClient;
+
+    /**
+     * @var Session
+     */
+    private $defaultSession;
 
     /**
      * @param array $config
@@ -87,6 +91,16 @@ class Client
         $session = new Session();
         $this->refresh($session);
         return $session;
+    }
+
+    /**
+     * Default session will be used if $this->get(), $this->post(), $this->put() or $this->deleted() are invoked
+     * without session object.
+     * @param Session $session
+     */
+    public function setDefaultSession(Session $session)
+    {
+        $this->defaultSession = $session;
     }
 
     /**
@@ -233,6 +247,10 @@ class Client
      */
     public function request($verb, $endpoint, Session $session = null, $options = [])
     {
+        if (is_null($session) && !is_null($this->defaultSession)) {
+            $session = $this->defaultSession;
+        }
+
         if (!is_null($session)) {
             if ($session->expired()) {
                 $this->refresh($session);
