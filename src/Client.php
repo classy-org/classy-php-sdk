@@ -121,23 +121,25 @@ class Client
     }
 
     /**
-     * @param $username
-     * @param $password
+     * @param array $params
      * @return Session|null
      */
-    public function newMemberSessionFromCredentials($username, $password)
+    public function newMemberSessionFromCredentials(array $params = [])
     {
+        $params += [
+            'username' => null,
+            'password' => null,
+        ];
+        $ips = $this->getClientIps();
+        $params = array_merge($params, [
+            'grant_type'    => 'password',
+            'client_id'     => $this->client_id,
+            'client_secret' => $this->client_secret,
+            'ip'            => empty($ips) ? null : implode(', ', $ips),
+        ]);
         try {
-            $ips = $this->getClientIps();
             $response = $this->request('POST', '/oauth2/auth', null, [
-                'form_params' => [
-                    'grant_type'    => 'password',
-                    'client_id'     => $this->client_id,
-                    'client_secret' => $this->client_secret,
-                    'username' => $username,
-                    'password' => $password,
-                    'ip'            => empty($ips) ? null : implode(', ', $ips),
-                ]
+                'form_params' => $params
             ]);
         } catch (APIResponseException $e) {
             $response = $e->getResponseData();

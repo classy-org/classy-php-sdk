@@ -107,18 +107,24 @@ class ClientTest extends TestCase
         $this->guzzleMock->shouldReceive('request')
             ->once()
             ->with('POST', '/oauth2/auth', Mockery::on(function($args) {
-                return $args['form_params'] === [
+                $this->assertEquals([
                     'grant_type' => 'password',
                     'client_id' => '123',
                     'client_secret' => '456',
                     'username' => 'email@domain.tld',
                     'password' => 'pass',
                     'ip' => null,
-                ];
+                    'foo' => 'bar',
+                ], $args['form_params']);
+                return true;
             }))
             ->andReturn(new Response(200, [], "{}"));
 
-        $session = $this->client->newMemberSessionFromCredentials("email@domain.tld", "pass");
+        $session = $this->client->newMemberSessionFromCredentials([
+            'username' => 'email@domain.tld',
+            'password' => 'pass',
+            'foo'      => 'bar',
+        ]);
         $this->assertInstanceOf(Session::class, $session);
     }
 
