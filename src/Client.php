@@ -35,6 +35,11 @@ class Client
     private $defaultSession;
 
     /**
+     * @var boolean
+     */
+    private $resultsAsArray;
+
+    /**
      * @param array $config
      * @throws SDKException
      */
@@ -63,6 +68,8 @@ class Client
         $this->version = urlencode($config['version']);
         $this->client_id = $config['client_id'];
         $this->client_secret = $config['client_secret'];
+
+        $this->resultsAsArray = isset($config['results_as_array']) ? $config['results_as_array'] : false;
     }
 
     /**
@@ -272,7 +279,7 @@ class Client
             throw new APIResponseException($e->getMessage(), $e->getCode(), $e);
         }
 
-        return json_decode($content);
+        return json_decode($content, $this->resultsAsArray);
     }
 
     private function applyVersion($version, $endpoint)
