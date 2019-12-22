@@ -217,7 +217,7 @@ class ClientTest extends TestCase
     }
 
 
-    public function testRESTVerbsProvider()
+    public function RESTVerbsProvider()
     {
         return [
             ['get', null],
@@ -229,7 +229,7 @@ class ClientTest extends TestCase
     }
 
     /**
-     * @dataProvider testRESTVerbsProvider
+     * @dataProvider RESTVerbsProvider
      * @covers Classy\Client::get
      * @covers Classy\Client::post
      * @covers Classy\Client::delete
@@ -382,7 +382,7 @@ class ClientTest extends TestCase
             $this->fail('Exception expected');
         } catch (APIResponseException $e) {
             $this->assertEquals(400, $e->getCode());
-            $this->assertEquals('invalid_request', $e->getResponseData()->error);
+            $this->assertEquals('invalid_client', $e->getResponseData()->error);
             $this->assertEquals('application/json; charset=utf-8', $e->getResponseHeaders()['Content-Type'][0]);
         }
     }
