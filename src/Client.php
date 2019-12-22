@@ -69,7 +69,7 @@ class Client
         $this->client_id = $config['client_id'];
         $this->client_secret = $config['client_secret'];
 
-        $this->resultsAsArray = isset($config['results_as_array']) ? $config['results_as_array'] : false;
+        $this->resultsAsArray = isset($config['results_as_array']) ? (bool) $config['results_as_array'] : false;
     }
 
     /**
