@@ -6,6 +6,7 @@ use Classy\Exceptions\APIResponseException;
 use Classy\Exceptions\SDKException;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Psr7\Response;
 
 class Client
 {
@@ -42,7 +43,8 @@ class Client
     {
         $config += [
             'base_uri'       => 'https://api.classy.org',
-            'check_ssl_cert' => true
+            'check_ssl_cert' => true,
+            'token_endpoint' => '/oauth2/auth'
         ];
 
         $this->httpClient = new GuzzleClient([
@@ -63,6 +65,7 @@ class Client
         $this->version = urlencode($config['version']);
         $this->client_id = $config['client_id'];
         $this->client_secret = $config['client_secret'];
+        $this->token_endpoint = $config['token_endpoint'];
     }
 
     /**
@@ -107,16 +110,18 @@ class Client
      * @param $code
      * @return Session
      */
-    public function newMemberSessionFromCode($code)
+    public function newMemberSessionFromCode($code, $redirectURI = null)
     {
-        $response = $this->request('POST', '/oauth2/auth', null, [
+        $response = $this->request('POST', $this->token_endpoint, null, [
             'form_params' => [
                 'grant_type'    => 'authorization_code',
                 'client_id'     => $this->client_id,
                 'client_secret' => $this->client_secret,
-                'code' => $code
+                'code' => $code,
+                'redirect_uri' => $redirectURI
             ]
         ]);
+
         return new Session($response);
     }
 
@@ -138,7 +143,7 @@ class Client
             'ip'            => empty($ips) ? null : implode(', ', $ips),
         ]);
         try {
-            $response = $this->request('POST', '/oauth2/auth', null, [
+            $response = $this->request('POST', $this->token_endpoint, null, [
                 'form_params' => $params
             ]);
         } catch (APIResponseException $e) {
@@ -169,7 +174,7 @@ class Client
     {
         if (!is_null($session->getRefreshToken())) {
             $ips = $this->getClientIps();
-            $response = $this->request('POST', '/oauth2/auth', null, [
+            $response = $this->request('POST', $this->token_endpoint, null, [
                 'form_params' => [
                     'grant_type'    => 'refresh_token',
                     'client_id'     => $this->client_id,
@@ -179,7 +184,7 @@ class Client
                 ]
             ]);
         } else {
-            $response = $this->request('POST', '/oauth2/auth', null, [
+            $response = $this->request('POST', $this->token_endpoint, null, [
                 'form_params' => [
                     'grant_type'    => 'client_credentials',
                     'client_id'     => $this->client_id,
@@ -245,10 +250,12 @@ class Client
      * @param $endpoint
      * @param Session|null $session
      * @param array $options
-     * @return array
+     * @param array $config
      */
-    public function request($verb, $endpoint, Session $session = null, $options = [])
+    public function request($verb, $endpoint, Session $session = null, $options = [], $config = [])
     {
+        $config += [ 'results_as' => 'object' ];
+
         if (is_null($session) && !is_null($this->defaultSession)) {
             $session = $this->defaultSession;
         }
@@ -264,15 +271,21 @@ class Client
         }
 
         try {
-            $content = $this->httpClient
-                ->request($verb, $endpoint, $options)
-                ->getBody()
-                ->getContents();
+
+            $response = $this->httpClient->request($verb, $endpoint, $options);
+
+            switch($config['results_as']) {
+                case 'response':
+                    return $response;
+                case 'array':
+                    return json_decode($response->getBody()->getContents(), true);
+                default:
+                    return json_decode($response->getBody()->getContents());
+            }
+
         } catch (BadResponseException $e) {
             throw new APIResponseException($e->getMessage(), $e->getCode(), $e);
         }
-
-        return json_decode($content);
     }
 
     private function applyVersion($version, $endpoint)
