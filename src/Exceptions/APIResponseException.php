@@ -12,11 +12,7 @@ class APIResponseException extends \Exception
 
     public function getResponseData($assoc = false)
     {
-        if ($assoc) {
-            return json_decode($this->getPrevious()->getResponse()->getBody()->getContents(), true);
-        }
-
-        return json_decode($this->getPrevious()->getResponse()->getBody()->getContents());
+        return json_decode($this->getPrevious()->getResponse()->getBody()->getContents(), $assoc);
     }
 
     public function getResponseHeaders()
