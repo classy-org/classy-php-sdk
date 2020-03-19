@@ -6,7 +6,6 @@ use Classy\Client;
 use Classy\Exceptions\APIResponseException;
 use Classy\Exceptions\SDKException;
 use Classy\Session;
-use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Psr7\Response;
 use Mockery;
 use ReflectionMethod;
@@ -14,7 +13,7 @@ use ReflectionMethod;
 class ClientTest extends TestCase
 {
 
-    public function constructProvider()
+    public function constructErrorProvider()
     {
         return [
             [[], "You must define the version of Classy API you want to use"],
@@ -25,7 +24,7 @@ class ClientTest extends TestCase
     }
 
     /**
-     * @dataProvider constructProvider
+     * @dataProvider constructErrorProvider
      * @covers Classy\Client::__construct
      */
     public function testConstructFailure($inputs, $error)
@@ -36,6 +35,24 @@ class ClientTest extends TestCase
         } catch (SDKException $e) {
             $this->assertEquals($error, $e->getMessage());
         }
+    }
+
+    /**
+     * @covers Classy\Client::__construct
+     */
+    public function testSettingTokenEndpoint()
+    {
+        $client = new Client(['version' => '2.0', 'client_id' => '123', 'client_secret' => 'asdf', 'token_endpoint' => '/callback']);
+        $this->assertEquals($client->token_endpoint, '/callback');
+    }
+
+    /**
+     * @covers Classy\Client::__construct
+     */
+    public function testNotSettingTokenEndpoint()
+    {
+        $client = new Client(['version' => '2.0', 'client_id' => '123', 'client_secret' => 'asdf']);
+        $this->assertEquals($client->token_endpoint, '/oauth2/auth');
     }
 
     /**
@@ -87,12 +104,34 @@ class ClientTest extends TestCase
             ->once()
             ->with('POST', '/oauth2/auth', Mockery::on(function($args) {
                 return $args['form_params'] === [
-                    'grant_type' => 'authorization_code',
-                    'client_id' => '123',
-                    'client_secret' => '456',
-                    'code' => '789',
-                    'redirect_uri' => 'https://example.com/callback'
-                ];
+                        'grant_type' => 'authorization_code',
+                        'client_id' => '123',
+                        'client_secret' => '456',
+                        'code' => '789'
+                    ];
+            }))
+            ->andReturn(new Response(200, [], "{}"));
+
+        $session = $this->client->newMemberSessionFromCode("789");
+
+        $this->assertInstanceOf(Session::class, $session);
+    }
+
+    /**
+     * @covers Classy\Client::newMemberSessionFromCode
+     */
+    public function testNewMemberSessionFromCodeWithRedirectUri()
+    {
+        $this->guzzleMock->shouldReceive('request')
+            ->once()
+            ->with('POST', '/oauth2/auth', Mockery::on(function($args) {
+                return $args['form_params'] === [
+                        'grant_type' => 'authorization_code',
+                        'client_id' => '123',
+                        'client_secret' => '456',
+                        'code' => '789',
+                        'redirect_uri' => 'https://example.com/callback'
+                    ];
             }))
             ->andReturn(new Response(200, [], "{}"));
 
@@ -369,9 +408,9 @@ class ClientTest extends TestCase
     }
 
     /**
-     * @covers Classy\Client::request
-     * @covers Classy\Exceptions\APIResponseException
-     */
+ * @covers Classy\Client::request
+ * @covers Classy\Exceptions\APIResponseException
+ */
     public function testErrorHandling()
     {
         $client = new Client([
@@ -386,6 +425,28 @@ class ClientTest extends TestCase
             $this->assertEquals(400, $e->getCode());
             $this->assertEquals('invalid_client', $e->getResponseData()->error);
             $this->assertEquals('application/json; charset=utf-8', $e->getResponseHeaders()['Content-Type'][0]);
+        }
+    }
+
+    /**
+     * @covers Classy\Client::request
+     * @covers Classy\Exceptions\APIResponseException
+     */
+    public function testGetResponseDataCanReturnArray()
+    {
+        // passing true to get response data is a proxy to passing true as the second param in json_decode
+        $assoc = true;
+
+        $client = new Client([
+            'version' => '2.0',
+            'client_id' => 'aze',
+            'client_secret' => 'aze'
+        ]);
+        try {
+            $client->newAppSession();
+            $this->fail('Exception expected');
+        } catch (APIResponseException $e) {
+            $this->assertEquals('invalid_client', $e->getResponseData($assoc)['error']);
         }
     }
 }

@@ -112,14 +112,19 @@ class Client
      */
     public function newMemberSessionFromCode($code, $redirectURI = null)
     {
+        $formParams =  [
+            'grant_type'    => 'authorization_code',
+            'client_id'     => $this->client_id,
+            'client_secret' => $this->client_secret,
+            'code' => $code
+        ];
+
+        if ($redirectURI) {
+            $formParams['redirect_uri'] = $redirectURI;
+        }
+
         $response = $this->request('POST', $this->token_endpoint, null, [
-            'form_params' => [
-                'grant_type'    => 'authorization_code',
-                'client_id'     => $this->client_id,
-                'client_secret' => $this->client_secret,
-                'code' => $code,
-                'redirect_uri' => $redirectURI
-            ]
+            'form_params' => $formParams
         ]);
 
         return new Session($response);
@@ -294,7 +299,6 @@ class Client
         $endpoint = trim($endpoint, "/ \t\n\r\0\x0B");
         return "/$version/$endpoint";
     }
-
 
     /**
      * @return array
