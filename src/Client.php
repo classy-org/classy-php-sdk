@@ -6,7 +6,6 @@ use Classy\Exceptions\APIResponseException;
 use Classy\Exceptions\SDKException;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\BadResponseException;
-use GuzzleHttp\Psr7\Response;
 
 class Client
 {
