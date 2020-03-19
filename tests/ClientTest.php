@@ -90,12 +90,14 @@ class ClientTest extends TestCase
                     'grant_type' => 'authorization_code',
                     'client_id' => '123',
                     'client_secret' => '456',
-                    'code' => '789'
+                    'code' => '789',
+                    'redirect_uri' => 'https://example.com/callback'
                 ];
             }))
             ->andReturn(new Response(200, [], "{}"));
 
-        $session = $this->client->newMemberSessionFromCode("789");
+        $session = $this->client->newMemberSessionFromCode("789", 'https://example.com/callback');
+
         $this->assertInstanceOf(Session::class, $session);
     }
 
@@ -382,7 +384,7 @@ class ClientTest extends TestCase
             $this->fail('Exception expected');
         } catch (APIResponseException $e) {
             $this->assertEquals(400, $e->getCode());
-            $this->assertEquals('invalid_request', $e->getResponseData()->error);
+            $this->assertEquals('invalid_client', $e->getResponseData()->error);
             $this->assertEquals('application/json; charset=utf-8', $e->getResponseHeaders()['Content-Type'][0]);
         }
     }
