@@ -10,9 +10,9 @@ class APIResponseException extends \Exception
         parent::__construct($message, $code, $previous);
     }
 
-    public function getResponseData()
+    public function getResponseData($assoc = false)
     {
-        return json_decode($this->getPrevious()->getResponse()->getBody()->getContents());
+        return json_decode($this->getPrevious()->getResponse()->getBody()->getContents(), $assoc);
     }
 
     public function getResponseHeaders()
