@@ -6,8 +6,10 @@ use Classy\Client;
 use Mockery;
 use PHPUnit_Framework_TestCase;
 
-class TestCase extends PHPUnit_Framework_TestCase
+class TestCase extends \PHPUnit\Framework\TestCase
 {
+    use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+
     /**
      * @var \Mockery\MockInterface
      */

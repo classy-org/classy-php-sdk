@@ -258,7 +258,7 @@ class ClientTest extends TestCase
     }
 
 
-    public function testRESTVerbsProvider()
+    public function RESTVerbsProvider()
     {
         return [
             ['get', null],
@@ -270,7 +270,7 @@ class ClientTest extends TestCase
     }
 
     /**
-     * @dataProvider testRESTVerbsProvider
+     * @dataProvider RESTVerbsProvider
      * @covers Classy\Client::get
      * @covers Classy\Client::post
      * @covers Classy\Client::delete
