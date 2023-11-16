@@ -5,7 +5,7 @@ namespace Classy;
 use Classy\Exceptions\SDKException;
 use DateTime;
 
-Class Session implements \Serializable
+Class Session
 {
     /**
      * @var string
@@ -107,5 +107,13 @@ Class Session implements \Serializable
         foreach ($values as $key => $value) {
             $this->$key = $value;
         }
+    }
+
+    public function __serialize() {
+        return $this->serialize(get_object_vars($this));
+    }
+
+    public function __unserialize(array $data): void {
+        $this->unserialize($data);
     }
 }
